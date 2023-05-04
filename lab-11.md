@@ -1,7 +1,7 @@
 Lab 11 - Smoking during pregnancy
 ================
-Insert your name here
-Insert date here
+Lindsey Wilson
+5/3/23
 
 ### Load packages and data
 
@@ -11,14 +11,75 @@ library(tidymodels)
 library(openintro)
 ```
 
+``` r
+nc <- ncbirths
+set.seed(85920305)
+```
+
+## Part 1
+
 ### Exercise 1
 
-Remove this text, and add your answer for Exercise 1 here. Add code
-chunks as needed. Don’t forget to label your code chunk. Do not use
-spaces in code chunk labels.
+There are 1000 cases in the dataset, where each case represents one baby
+born in North Carolina in 2004
 
 ### Exercise 2
 
-…
+Let’s filter our dataset to only include babies born to White mothers
+and calculate their average birth weight:
 
-Add exercise headings as needed.
+``` r
+ncbirths_white <- nc %>%
+  filter(whitemom == "white")
+
+mean(ncbirths_white$weight)
+```
+
+    ## [1] 7.250462
+
+Looks like the average White baby (or at least, the average baby born to
+a White mother) weighed 7.25. pounds at birth in 2004
+
+### Exercise 3
+
+I think so. I’m not totally sure what this is asking, but as far as I
+can tell the observations are independent (for example, nothing would
+allow us to tell whether individuals in the dataset are related in any
+way)
+
+### Exercise 4
+
+Let’s actually run our test using bootstrapping:
+
+``` r
+df_boot_weight <- ncbirths_white %>%
+  specify(response = weight) %>%
+  generate(reps = 15000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+df_boot_weight <- df_boot_weight %>%
+  mutate(stat = stat + (7.43 - mean(ncbirths_white$weight)))
+
+df_boot_weight %>%
+  ggplot(aes(x = stat)) + 
+  geom_histogram(color = "black", fill = "blue")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](lab-11_files/figure-gfm/bootstrap-1.png)<!-- -->
+
+``` r
+upper_tail <- sum(df_boot_weight$stat >= 7.61)/length(df_boot_weight$stat)
+lower_tail <- sum(df_boot_weight$stat <= 7.25)/length(df_boot_weight$stat)
+p_val <- upper_tail + lower_tail
+```
+
+Based on this calculation, it looks like the 2-tailed p-value for our
+observed sample mean of 7.25 is .00053, which is much less than .05.
+Therefore, it looks like our observed sample of White babies in 2004
+weighed significantly less than White babies in 1995.
+
+## Part 2
+
+### Exercise 5
